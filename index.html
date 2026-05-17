@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>&#30422;&#20102;&#20010;&#30422;</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="app-shell">
+    <header class="mobile-topbar">
+      <div class="topbar-side topbar-side-left">
+        <div class="mini-pill level-pill">
+          <span class="mini-label">&#20851;&#21345;</span>
+          <strong id="level-text">&#31532;1&#20851;</strong>
+        </div>
+      </div>
+
+      <div class="brand-block">
+        <div class="title-row">
+          <span class="bunny bunny-left" aria-hidden="true"></span>
+          <h1>&#30422;&#20102;&#20010;&#30422;</h1>
+          <span class="bunny bunny-right" aria-hidden="true"></span>
+        </div>
+      </div>
+    </header>
+
+    <section class="status-strip" aria-label="&#28216;&#25103;&#29366;&#24577;">
+      <article class="stat-card">
+        <span>&#29366;&#24577;</span>
+        <strong id="status-text">&#26410;&#24320;&#22987;</strong>
+      </article>
+      <article class="stat-card">
+        <span>&#21097;&#20313;</span>
+        <strong id="remaining-count">0</strong>
+      </article>
+      <article class="stat-card">
+        <span>&#27133;&#20301;</span>
+        <strong id="slot-count">0 / 7</strong>
+      </article>
+    </section>
+
+    <section class="header-actions action-bar" aria-label="&#24320;&#22987;&#21644;&#37325;&#24320;">
+      <button id="start-btn" class="top-action-btn" type="button">&#24320;&#22987;&#28216;&#25103;</button>
+      <button id="restart-btn" class="top-action-btn" type="button">&#37325;&#26032;&#24320;&#22987;</button>
+    </section>
+
+    <section class="music-shell" aria-label="&#32972;&#26223;&#38899;&#20048;&#25773;&#25918;&#22120;">
+      <div class="music-cover-wrap">
+        <img id="music-cover" class="music-cover" src="assets/realg/%E5%B0%81%E9%9D%A2.png" alt="&#19987;&#36753;&#23553;&#38754;">
+      </div>
+      <div class="music-meta">
+        <p class="music-album">REALG</p>
+        <strong id="music-track-name" class="music-track-name">&#26410;&#25773;&#25918;</strong>
+      </div>
+      <div class="music-controls">
+        <button id="prev-track-btn" class="music-btn" type="button" aria-label="&#19978;&#19968;&#39318;">&#x23EE;</button>
+        <button id="play-pause-btn" class="music-btn music-btn-primary" type="button" aria-label="&#25773;&#25918;&#25110;&#26242;&#20572;">&#x25B6;</button>
+        <button id="next-track-btn" class="music-btn" type="button" aria-label="&#19979;&#19968;&#39318;">&#x23ED;</button>
+        <button id="loop-track-btn" class="music-btn" type="button" aria-label="&#21333;&#26354;&#24490;&#29615;">&#x21BB;</button>
+      </div>
+      <audio id="bgm-audio" preload="metadata"></audio>
+    </section>
+
+    <section class="game-stage">
+      <div class="stage-decor stage-decor-left" aria-hidden="true"></div>
+      <div class="stage-decor stage-decor-right" aria-hidden="true"></div>
+      <div class="board-frame">
+        <div id="board" class="board" aria-label="&#21472;&#29260;&#21306;&#22495;"></div>
+        <div id="overlay" class="overlay visible">
+          <div class="overlay-card">
+            <h2 id="overlay-title">&#20934;&#22791;&#24320;&#22987;</h2>
+            <p id="overlay-text"></p>
+            <div id="overlay-actions" class="overlay-actions"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="tray-dock">
+      <section class="toolbox" aria-label="&#36947;&#20855;&#21306;">
+        <button id="undo-btn" class="tool-card" type="button">
+          <span class="tool-name">&#25764;&#22238;</span>
+          <strong id="undo-count">1</strong>
+        </button>
+        <button id="shuffle-btn" class="tool-card" type="button">
+          <span class="tool-name">&#27927;&#29260;</span>
+          <strong id="shuffle-count">1</strong>
+        </button>
+        <button id="remove-btn" class="tool-card danger" type="button">
+          <span class="tool-name">&#31227;&#20986;3&#24352;</span>
+          <strong id="remove-count">1</strong>
+        </button>
+      </section>
+
+      <div class="tray-shell">
+        <div class="tray-headline">
+          <h2>&#27133;&#20301;&#21306;</h2>
+        </div>
+        <div id="tray" class="tray" aria-label="&#27133;&#20301;&#21306;"></div>
+      </div>
+
+      <div class="stash-shell">
+        <div class="stash-headline">
+          <h2>&#20020;&#26102;&#27133;&#20301;&#21306;</h2>
+        </div>
+        <div id="stash" class="stash" aria-label="&#20020;&#26102;&#27133;&#20301;&#21306;"></div>
+      </div>
+    </section>
+  </main>
+
+  <script src="levels.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
