@@ -987,6 +987,36 @@ function getAvailableTiles(tiles = getActiveTiles()) {
   return tiles.filter((tile) => !isBlocked(tile));
 }
 
+function getRenderableTiles(activeTiles) {
+  const currentLevel = getCurrentLevel();
+  const renderDepthWindow = Number.isFinite(currentLevel.renderDepthWindow)
+    ? currentLevel.renderDepthWindow
+    : null;
+  const renderVisibleCap = Number.isFinite(currentLevel.renderVisibleCap)
+    ? currentLevel.renderVisibleCap
+    : null;
+
+  if (!renderDepthWindow && !renderVisibleCap) {
+    return activeTiles;
+  }
+
+  const topLayer = activeTiles.reduce((maxLayer, tile) => Math.max(maxLayer, tile.layer), -Infinity);
+  let renderable = activeTiles;
+
+  if (Number.isFinite(renderDepthWindow) && topLayer !== -Infinity) {
+    const minLayer = Math.max(0, topLayer - renderDepthWindow);
+    renderable = renderable.filter((tile) => tile.layer >= minLayer);
+  }
+
+  if (Number.isFinite(renderVisibleCap) && renderable.length > renderVisibleCap) {
+    renderable = [...renderable]
+      .sort((first, second) => second.layer - first.layer || first.y - second.y || first.x - second.x)
+      .slice(0, renderVisibleCap);
+  }
+
+  return renderable;
+}
+
 function updateStatus(text) {
   statusText.textContent = text;
 }
@@ -1332,8 +1362,9 @@ function renderBoard(resetView = false) {
   const activeTiles = boardTiles
     .filter((tile) => !tile.removed)
     .sort((first, second) => first.layer - second.layer || first.y - second.y || first.x - second.x);
+  const renderableTiles = getRenderableTiles(activeTiles);
 
-  activeTiles.forEach((tile) => {
+  renderableTiles.forEach((tile) => {
     const tileElement = createTileElement(tile);
     const blocked = isBlocked(tile);
     tileElement.classList.toggle("blocked", blocked);
