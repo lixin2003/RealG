@@ -309,8 +309,13 @@ function setStoredPlayerId(playerId) {
   }
 }
 
-async function loadLeaderboard(limit = 10) {
-  const response = await fetch(`/api/leaderboard?levelId=stage-2&limit=${limit}`);
+async function loadLeaderboard(limit) {
+  const params = new URLSearchParams({ levelId: "stage-2" });
+  if (Number.isFinite(limit) && limit > 0) {
+    params.set("limit", String(Math.floor(limit)));
+  }
+
+  const response = await fetch(`/api/leaderboard?${params.toString()}`);
   if (!response.ok) {
     throw new Error("排行榜加载失败");
   }
@@ -352,6 +357,11 @@ function renderLeaderboardNode(leaderboard) {
     return wrap;
   }
 
+  const summary = document.createElement("div");
+  summary.className = "leaderboard-summary";
+  summary.textContent = `共 ${leaderboard.length} 位玩家上榜`;
+  wrap.appendChild(summary);
+
   const head = document.createElement("div");
   head.className = "leaderboard-head";
   head.innerHTML = "<span>排名</span><span>玩家</span><span>时间</span>";
@@ -360,6 +370,9 @@ function renderLeaderboardNode(leaderboard) {
   leaderboard.forEach((entry) => {
     const row = document.createElement("div");
     row.className = "leaderboard-row";
+    if (entry.rank <= 3) {
+      row.classList.add(`leaderboard-row-top-${entry.rank}`);
+    }
 
     const rank = document.createElement("span");
     rank.className = "leaderboard-rank";
@@ -397,7 +410,7 @@ async function showLeaderboardOverlay(message = "") {
   setOverlayBody(loading);
 
   try {
-    const leaderboard = await loadLeaderboard(10);
+    const leaderboard = await loadLeaderboard();
     setOverlayBody(renderLeaderboardNode(leaderboard));
   } catch (error) {
     const failed = document.createElement("div");
@@ -1080,6 +1093,7 @@ function showOverlay(title, text) {
   overlayText.hidden = !text;
   clearOverlayBody();
   overlay.querySelector(".overlay-card")?.classList.remove("hint-card");
+  boardWrap.classList.add("overlay-open");
   overlay.classList.add("visible");
 }
 
@@ -1087,6 +1101,7 @@ function hideOverlay() {
   clearHintOverlayTimer();
   overlay.querySelector(".overlay-card")?.classList.remove("hint-card");
   overlay.classList.remove("visible");
+  boardWrap.classList.remove("overlay-open");
 }
 
 function showHintOverlay(title, text, durationMs = 3000) {
@@ -1096,12 +1111,14 @@ function showHintOverlay(title, text, durationMs = 3000) {
   overlayText.hidden = !text;
   clearOverlayBody();
   overlay.querySelector(".overlay-card")?.classList.add("hint-card");
+  boardWrap.classList.add("overlay-open");
   overlay.classList.add("visible");
   setOverlayActions([]);
 
   hintOverlayTimeoutId = window.setTimeout(() => {
     overlay.querySelector(".overlay-card")?.classList.remove("hint-card");
     overlay.classList.remove("visible");
+    boardWrap.classList.remove("overlay-open");
     hintOverlayTimeoutId = null;
   }, durationMs);
 }

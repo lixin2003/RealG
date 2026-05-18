@@ -62,14 +62,17 @@ export default async function handler(request, response) {
   const levelId = typeof request.query.levelId === "string" && request.query.levelId.trim()
     ? request.query.levelId.trim()
     : "stage-2";
-  const limitValue = Number.parseInt(String(request.query.limit || "20"), 10);
-  const limit = Number.isFinite(limitValue) ? Math.min(Math.max(limitValue, 1), 100) : 20;
+  const hasLimitParam = typeof request.query.limit === "string" && request.query.limit.trim() !== "";
+  const limitValue = hasLimitParam ? Number.parseInt(String(request.query.limit), 10) : null;
+  const limit = Number.isFinite(limitValue) ? Math.min(Math.max(limitValue, 1), 1000) : null;
 
   const url = new URL(`${SUPABASE_URL}/rest/v1/${SUPABASE_TABLE}`);
   url.searchParams.set("select", "player_id,level_id,clear_time_ms,created_at");
   url.searchParams.set("level_id", `eq.${levelId}`);
   url.searchParams.set("order", "clear_time_ms.asc,created_at.asc");
-  url.searchParams.set("limit", String(Math.max(limit * 3, 50)));
+  if (limit) {
+    url.searchParams.set("limit", String(Math.max(limit * 3, 50)));
+  }
 
   try {
     const upstreamResponse = await fetch(url, {
@@ -83,7 +86,8 @@ export default async function handler(request, response) {
     }
 
     const rows = await upstreamResponse.json();
-    const leaderboard = formatRows(Array.isArray(rows) ? rows : []).slice(0, limit);
+    const formattedRows = formatRows(Array.isArray(rows) ? rows : []);
+    const leaderboard = limit ? formattedRows.slice(0, limit) : formattedRows;
     sendJson(response, 200, { leaderboard });
   } catch (error) {
     sendJson(response, 500, {

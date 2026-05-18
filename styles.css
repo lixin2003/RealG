@@ -426,6 +426,10 @@ button.alert {
   cursor: grab;
 }
 
+.board-frame.overlay-open {
+  touch-action: auto;
+}
+
 .board-frame::before {
   content: "";
   position: absolute;
@@ -510,6 +514,7 @@ button.alert {
   display: grid;
   place-items: center;
   padding: 12px;
+  overflow-y: auto;
   background: rgba(7, 6, 6, 0.52);
   opacity: 0;
   visibility: hidden;
@@ -523,6 +528,9 @@ button.alert {
 
 .overlay-card {
   width: min(100%, 310px);
+  max-height: calc(100% - 24px);
+  display: flex;
+  flex-direction: column;
   padding: 15px 13px;
   border-radius: 18px;
   text-align: center;
@@ -544,10 +552,14 @@ button.alert {
 }
 
 .overlay-body {
+  min-height: 0;
+  flex: 1 1 auto;
   margin-top: 12px;
   display: grid;
   gap: 10px;
   text-align: left;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .overlay-body[hidden] {
@@ -594,6 +606,12 @@ button.alert {
   gap: 6px;
 }
 
+.leaderboard-summary {
+  font-size: 0.62rem;
+  color: rgba(255, 232, 171, 0.78);
+  text-align: right;
+}
+
 .leaderboard-head,
 .leaderboard-row {
   display: grid;
@@ -603,8 +621,13 @@ button.alert {
 }
 
 .leaderboard-head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 2px 0 6px;
   font-size: 0.58rem;
   color: rgba(255, 228, 156, 0.72);
+  background: linear-gradient(180deg, rgba(15, 11, 11, 0.96), rgba(15, 11, 11, 0.86));
 }
 
 .leaderboard-row {
@@ -614,6 +637,30 @@ button.alert {
   border: 1px solid rgba(255, 212, 71, 0.12);
   color: #fff2c0;
   font-size: 0.7rem;
+}
+
+.leaderboard-row-top-1 {
+  background: linear-gradient(180deg, rgba(255, 224, 122, 0.3), rgba(255, 255, 255, 0.08));
+  border-color: rgba(255, 224, 122, 0.5);
+  box-shadow: 0 10px 16px rgba(255, 200, 72, 0.18);
+}
+
+.leaderboard-row-top-2 {
+  background: linear-gradient(180deg, rgba(217, 225, 235, 0.22), rgba(255, 255, 255, 0.07));
+  border-color: rgba(217, 225, 235, 0.36);
+  box-shadow: 0 8px 14px rgba(172, 184, 196, 0.14);
+}
+
+.leaderboard-row-top-3 {
+  background: linear-gradient(180deg, rgba(214, 155, 108, 0.24), rgba(255, 255, 255, 0.06));
+  border-color: rgba(214, 155, 108, 0.38);
+  box-shadow: 0 8px 14px rgba(167, 104, 57, 0.14);
+}
+
+.leaderboard-row-top-1 .leaderboard-rank,
+.leaderboard-row-top-2 .leaderboard-rank,
+.leaderboard-row-top-3 .leaderboard-rank {
+  font-weight: 800;
 }
 
 .leaderboard-empty {
