@@ -96,6 +96,7 @@ let singleTrackLoop = true;
 let levelTimerStartedAt = null;
 let levelTimerIntervalId = null;
 let latestClearTimeMs = null;
+let hintOverlayTimeoutId = null;
 let boardViewport = {
   contentWidth: 0,
   contentHeight: 0,
@@ -266,6 +267,13 @@ function clearOverlayBody() {
 
   overlayBody.innerHTML = "";
   overlayBody.hidden = true;
+}
+
+function clearHintOverlayTimer() {
+  if (hintOverlayTimeoutId) {
+    window.clearTimeout(hintOverlayTimeoutId);
+    hintOverlayTimeoutId = null;
+  }
 }
 
 function setOverlayBody(node) {
@@ -1002,15 +1010,36 @@ function updateCounters() {
 }
 
 function showOverlay(title, text) {
+  clearHintOverlayTimer();
   overlayTitle.textContent = title;
   overlayText.textContent = text || "";
   overlayText.hidden = !text;
   clearOverlayBody();
+  overlay.querySelector(".overlay-card")?.classList.remove("hint-card");
   overlay.classList.add("visible");
 }
 
 function hideOverlay() {
+  clearHintOverlayTimer();
+  overlay.querySelector(".overlay-card")?.classList.remove("hint-card");
   overlay.classList.remove("visible");
+}
+
+function showHintOverlay(title, text, durationMs = 3000) {
+  clearHintOverlayTimer();
+  overlayTitle.textContent = title;
+  overlayText.textContent = text || "";
+  overlayText.hidden = !text;
+  clearOverlayBody();
+  overlay.querySelector(".overlay-card")?.classList.add("hint-card");
+  overlay.classList.add("visible");
+  setOverlayActions([]);
+
+  hintOverlayTimeoutId = window.setTimeout(() => {
+    overlay.querySelector(".overlay-card")?.classList.remove("hint-card");
+    overlay.classList.remove("visible");
+    hintOverlayTimeoutId = null;
+  }, durationMs);
 }
 
 function setOverlayActions(actions = []) {
@@ -1842,6 +1871,7 @@ function resetGame() {
   undoRemaining = getToolCount("undoCount");
   removeRemaining = getToolCount("removeCount");
   stopLevelTimer();
+  clearHintOverlayTimer();
   levelTimerStartedAt = null;
   latestClearTimeMs = null;
   gameState = "idle";
@@ -1887,6 +1917,8 @@ function startGame() {
   renderTray();
   renderStash();
   renderBoard(true);
+
+  showHintOverlay("操作提示", "可以双指缩放画面，拖动查看更深层卡牌。", 3000);
 }
 
 startButton.addEventListener("click", () => {

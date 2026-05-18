@@ -404,7 +404,7 @@ button.alert {
   width: 100%;
   min-width: 0;
   overflow: hidden;
-  min-height: clamp(360px, 56vh, var(--board-min-height, 340px));
+  min-height: clamp(330px, 51vh, var(--board-min-height, 340px));
   border-radius: 20px 20px 16px 16px;
   border: 3px solid rgba(255, 212, 71, 0.3);
   background:
@@ -638,6 +638,22 @@ button.alert {
   color: #2a1402;
   background: linear-gradient(180deg, #ffe37b, #efb300);
   box-shadow: 0 8px 14px rgba(0, 0, 0, 0.28);
+}
+
+.overlay-card.hint-card {
+  width: min(100%, 260px);
+  padding: 12px 12px;
+  border-width: 2px;
+}
+
+.overlay-card.hint-card h2 {
+  font-size: 0.94rem;
+  margin-bottom: 6px;
+}
+
+.overlay-card.hint-card p {
+  font-size: 0.68rem;
+  line-height: 1.5;
 }
 
 .tray-dock {
@@ -929,7 +945,7 @@ button.alert {
   }
 
   .board-frame {
-    min-height: clamp(350px, 58vh, var(--board-min-height, 300px));
+    min-height: clamp(300px, 50vh, var(--board-min-height, 300px));
   }
 
   .tool-card {
