@@ -1,4 +1,4 @@
-const boardElement = document.getElementById("board");
+﻿const boardElement = document.getElementById("board");
 const trayElement = document.getElementById("tray");
 const stashElement = document.getElementById("stash");
 const bgmAudio = document.getElementById("bgm-audio");
@@ -8,6 +8,7 @@ const undoButton = document.getElementById("undo-btn");
 const shuffleButton = document.getElementById("shuffle-btn");
 const removeButton = document.getElementById("remove-btn");
 const restartButton = document.getElementById("restart-btn");
+const leaderboardButton = document.getElementById("leaderboard-btn");
 const prevTrackButton = document.getElementById("prev-track-btn");
 const playPauseButton = document.getElementById("play-pause-btn");
 const nextTrackButton = document.getElementById("next-track-btn");
@@ -17,6 +18,8 @@ const statusText = document.getElementById("status-text");
 const levelText = document.getElementById("level-text");
 const remainingCount = document.getElementById("remaining-count");
 const slotCount = document.getElementById("slot-count");
+const timerCard = document.getElementById("timer-card");
+const timerText = document.getElementById("timer-text");
 const undoCount = document.getElementById("undo-count");
 const shuffleCount = document.getElementById("shuffle-count");
 const removeCount = document.getElementById("remove-count");
@@ -24,6 +27,7 @@ const removeCount = document.getElementById("remove-count");
 const overlay = document.getElementById("overlay");
 const overlayTitle = document.getElementById("overlay-title");
 const overlayText = document.getElementById("overlay-text");
+const overlayBody = document.getElementById("overlay-body");
 const overlayActions = document.getElementById("overlay-actions");
 const boardWrap = document.querySelector(".board-frame");
 const musicCover = document.getElementById("music-cover");
@@ -89,6 +93,9 @@ let removeRemaining = 1;
 let currentLevelIndex = 0;
 let currentTrackIndex = 0;
 let singleTrackLoop = true;
+let levelTimerStartedAt = null;
+let levelTimerIntervalId = null;
+let latestClearTimeMs = null;
 let boardViewport = {
   contentWidth: 0,
   contentHeight: 0,
@@ -192,6 +199,297 @@ function getToolCount(toolKey) {
     ? currentLevel[toolKey]
     : fallback;
   return Math.max(1, configuredCount);
+}
+
+function getInitialViewScaleMultiplier() {
+  const currentLevel = getCurrentLevel();
+  const configuredMultiplier = currentLevel && Number.isFinite(currentLevel.initialViewScaleMultiplier)
+    ? currentLevel.initialViewScaleMultiplier
+    : 1;
+  return Math.max(1, configuredMultiplier);
+}
+
+function isTimedLevel() {
+  return currentLevelIndex === 1;
+}
+
+function formatElapsedTime(totalMilliseconds) {
+  const totalSeconds = Math.max(0, Math.floor(totalMilliseconds / 1000));
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  if (hours > 0) {
+    return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+  }
+
+  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+}
+
+function getTimedLevelSummary() {
+  if (!isTimedLevel() || !levelTimerStartedAt) {
+    return "";
+  }
+
+  return `本次通关时间：${formatElapsedTime(Date.now() - levelTimerStartedAt)}`;
+}
+
+function getLatestClearTimeMs() {
+  if (!isTimedLevel() || !levelTimerStartedAt) {
+    return null;
+  }
+
+  return latestClearTimeMs || Math.max(0, Date.now() - levelTimerStartedAt);
+}
+
+function updateTimerUi() {
+  if (!timerCard || !timerText) {
+    return;
+  }
+
+  if (!isTimedLevel()) {
+    timerCard.hidden = true;
+    timerText.textContent = "00:00";
+    return;
+  }
+
+  timerCard.hidden = false;
+  timerText.textContent = levelTimerStartedAt
+    ? formatElapsedTime(Date.now() - levelTimerStartedAt)
+    : "00:00";
+}
+
+function clearOverlayBody() {
+  if (!overlayBody) {
+    return;
+  }
+
+  overlayBody.innerHTML = "";
+  overlayBody.hidden = true;
+}
+
+function setOverlayBody(node) {
+  if (!overlayBody) {
+    return;
+  }
+
+  overlayBody.innerHTML = "";
+  if (node) {
+    overlayBody.appendChild(node);
+    overlayBody.hidden = false;
+  } else {
+    overlayBody.hidden = true;
+  }
+}
+
+function getStoredPlayerId() {
+  try {
+    return window.localStorage.getItem("realg_player_id") || "";
+  } catch {
+    return "";
+  }
+}
+
+function setStoredPlayerId(playerId) {
+  try {
+    window.localStorage.setItem("realg_player_id", playerId);
+  } catch {
+    // Ignore localStorage write failures.
+  }
+}
+
+async function loadLeaderboard(limit = 10) {
+  const response = await fetch(`/api/leaderboard?levelId=stage-2&limit=${limit}`);
+  if (!response.ok) {
+    throw new Error("排行榜加载失败");
+  }
+
+  const payload = await response.json();
+  return Array.isArray(payload.leaderboard) ? payload.leaderboard : [];
+}
+
+async function submitLeaderboardScore(playerId, clearTimeMs) {
+  const response = await fetch("/api/submit-score", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      playerId,
+      levelId: "stage-2",
+      clearTimeMs
+    })
+  });
+
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(payload.error || "提交成绩失败");
+  }
+
+  return payload;
+}
+
+function renderLeaderboardNode(leaderboard) {
+  const wrap = document.createElement("div");
+  wrap.className = "leaderboard";
+
+  if (!leaderboard.length) {
+    const empty = document.createElement("div");
+    empty.className = "leaderboard-empty";
+    empty.textContent = "还没有成绩，来做第一个上榜的人。";
+    wrap.appendChild(empty);
+    return wrap;
+  }
+
+  const head = document.createElement("div");
+  head.className = "leaderboard-head";
+  head.innerHTML = "<span>排名</span><span>玩家</span><span>时间</span>";
+  wrap.appendChild(head);
+
+  leaderboard.forEach((entry) => {
+    const row = document.createElement("div");
+    row.className = "leaderboard-row";
+
+    const rank = document.createElement("span");
+    rank.className = "leaderboard-rank";
+    rank.textContent = `#${entry.rank}`;
+
+    const player = document.createElement("span");
+    player.className = "leaderboard-player";
+    player.textContent = entry.playerId;
+
+    const time = document.createElement("span");
+    time.className = "leaderboard-time";
+    time.textContent = formatElapsedTime(entry.clearTimeMs);
+
+    row.append(rank, player, time);
+    wrap.appendChild(row);
+  });
+
+  return wrap;
+}
+
+async function showLeaderboardOverlay(message = "") {
+  showOverlay("第二关排行榜", message);
+  setOverlayActions([
+    {
+      label: "再来一把",
+      onClick: () => {
+        currentLevelIndex = 0;
+        resetGame();
+        startGame();
+      }
+    }
+  ]);
+
+  const loading = document.createElement("div");
+  loading.className = "leaderboard-empty";
+  loading.textContent = "排行榜加载中...";
+  setOverlayBody(loading);
+
+  try {
+    const leaderboard = await loadLeaderboard(10);
+    setOverlayBody(renderLeaderboardNode(leaderboard));
+  } catch (error) {
+    const failed = document.createElement("div");
+    failed.className = "leaderboard-empty";
+    failed.textContent = error instanceof Error ? error.message : "排行榜加载失败";
+    setOverlayBody(failed);
+  }
+}
+
+function showScoreSubmitOverlay() {
+  const clearTimeMs = getLatestClearTimeMs();
+  const timedSummary = getTimedLevelSummary();
+
+  showOverlay("第二关通关", timedSummary || "本次通关完成");
+
+  const body = document.createElement("div");
+  body.className = "overlay-form";
+
+  const label = document.createElement("label");
+  label.className = "overlay-label";
+  label.setAttribute("for", "player-id-input");
+  label.textContent = "输入你的玩家 ID（2-20 位，只能用字母、数字、下划线）";
+
+  const input = document.createElement("input");
+  input.id = "player-id-input";
+  input.className = "overlay-input";
+  input.type = "text";
+  input.maxLength = 20;
+  input.autocomplete = "nickname";
+  input.placeholder = "例如：yang01";
+  input.value = getStoredPlayerId();
+
+  const hint = document.createElement("p");
+  hint.className = "overlay-hint";
+  hint.textContent = "提交后会按第二关最好成绩参与排行榜。";
+
+  body.append(label, input, hint);
+  setOverlayBody(body);
+
+  setOverlayActions([
+    {
+      label: "提交成绩",
+      onClick: async () => {
+        const playerId = input.value.trim();
+        if (!/^[A-Za-z0-9_]{2,20}$/.test(playerId)) {
+          hint.textContent = "ID 不合法，请用 2-20 位字母、数字或下划线。";
+          return;
+        }
+
+        if (!clearTimeMs) {
+          hint.textContent = "当前没有可提交的通关时间。";
+          return;
+        }
+
+        hint.textContent = "提交中...";
+        try {
+          await submitLeaderboardScore(playerId, clearTimeMs);
+          setStoredPlayerId(playerId);
+          await showLeaderboardOverlay(`成绩已提交，${playerId} 的通关时间是 ${formatElapsedTime(clearTimeMs)}。`);
+        } catch (error) {
+          hint.textContent = error instanceof Error ? error.message : "提交失败，请稍后再试。";
+        }
+      }
+    },
+    {
+      label: "查看排行榜",
+      className: "secondary",
+      onClick: () => {
+        showLeaderboardOverlay(timedSummary);
+      }
+    },
+    {
+      label: "再来一把",
+      className: "secondary",
+      onClick: () => {
+        currentLevelIndex = 0;
+        resetGame();
+        startGame();
+      }
+    }
+  ]);
+}
+
+function stopLevelTimer() {
+  if (levelTimerIntervalId) {
+    window.clearInterval(levelTimerIntervalId);
+    levelTimerIntervalId = null;
+  }
+}
+
+function startLevelTimer() {
+  stopLevelTimer();
+  updateTimerUi();
+
+  if (!isTimedLevel() || !levelTimerStartedAt) {
+    return;
+  }
+
+  levelTimerIntervalId = window.setInterval(() => {
+    updateTimerUi();
+  }, 1000);
 }
 
 function shuffle(array) {
@@ -516,6 +814,19 @@ function getBlockThresholdRatio() {
   return currentLevel.blockThresholdRatio || 0.22;
 }
 
+function getInteractionBlockThresholdRatio(tile) {
+  const currentLevel = getCurrentLevel();
+  const baseRatio = Number.isFinite(currentLevel.interactionBlockThresholdRatio)
+    ? currentLevel.interactionBlockThresholdRatio
+    : getBlockThresholdRatio() + 0.2;
+  const maxLayer = Array.isArray(currentLevel.layers) ? currentLevel.layers.length - 1 : 0;
+  const depthFromTop = Math.max(0, maxLayer - tile.layer);
+  const depthBonus = Number.isFinite(currentLevel.interactionDeepLayerBonus)
+    ? currentLevel.interactionDeepLayerBonus
+    : 0;
+  return Math.min(0.72, baseRatio + depthFromTop * depthBonus);
+}
+
 function getBlockedState(tiles, tile) {
   const threshold = tile.width * tile.height * getBlockThresholdRatio();
   return tiles.some((candidate) => {
@@ -653,7 +964,7 @@ function overlapArea(first, second) {
 }
 
 function isBlocked(tile) {
-  const threshold = tile.width * tile.height * getBlockThresholdRatio();
+  const threshold = tile.width * tile.height * getInteractionBlockThresholdRatio(tile);
   return boardTiles.some((candidate) => {
     if (candidate.removed || candidate.uid === tile.uid || candidate.layer <= tile.layer) {
       return false;
@@ -696,6 +1007,7 @@ function showOverlay(title, text) {
   overlayTitle.textContent = title;
   overlayText.textContent = text || "";
   overlayText.hidden = !text;
+  clearOverlayBody();
   overlay.classList.add("visible");
 }
 
@@ -831,11 +1143,15 @@ function fitBoardToViewport(resetView = false) {
   const availableHeight = Math.max(1, boardWrap.clientHeight - 16);
 
   if (resetView || boardViewport.scale < boardViewport.minScale || boardViewport.scale === 1) {
-    boardViewport.scale = boardViewport.minScale;
+    const initialScale = Math.min(
+      boardViewport.maxScale,
+      Math.max(boardViewport.minScale, boardViewport.minScale * getInitialViewScaleMultiplier())
+    );
+    boardViewport.scale = initialScale;
     const centered = clampBoardOffset(
-      (availableWidth - boardViewport.contentWidth * boardViewport.minScale) / 2,
-      (availableHeight - boardViewport.contentHeight * boardViewport.minScale) / 2,
-      boardViewport.minScale
+      (availableWidth - boardViewport.contentWidth * initialScale) / 2,
+      (availableHeight - boardViewport.contentHeight * initialScale) / 2,
+      initialScale
     );
     boardViewport.offsetX = centered.x;
     boardViewport.offsetY = centered.y;
@@ -1372,49 +1688,59 @@ function checkWinOrLose() {
 
   if (remaining === 0 && trayTiles.length === 0) {
     gameState = "won";
+    stopLevelTimer();
+    updateTimerUi();
     updateStatus("\u5df2\u901a\u5173");
+    latestClearTimeMs = getLatestClearTimeMs();
     const nextLevelExists = currentLevelIndex < levelDefinitions.length - 1;
-    showOverlay(
-      nextLevelExists ? "\u672c\u5173\u5b8c\u6210" : "\u606d\u559c\u4f60\u662f\u4e00\u540d\u771f\u6b63\u7684GAI\u5b5d\u5b50",
-      ""
-    );
-    setOverlayActions(
-      nextLevelExists
-        ? [
-            {
-              label: "\u8fdb\u5165\u4e0b\u4e00\u5173",
-              onClick: () => {
-                currentLevelIndex += 1;
-                resetGame();
-                startGame();
+    const timedSummary = getTimedLevelSummary();
+    if (isTimedLevel()) {
+      showScoreSubmitOverlay();
+    } else {
+      showOverlay(
+        nextLevelExists ? "\u672c\u5173\u5b8c\u6210" : "\u606d\u559c\u4f60\u662f\u4e00\u540d\u771f\u6b63\u7684GAI\u5b5d\u5b50",
+        timedSummary
+      );
+      setOverlayActions(
+        nextLevelExists
+          ? [
+              {
+                label: "\u8fdb\u5165\u4e0b\u4e00\u5173",
+                onClick: () => {
+                  currentLevelIndex += 1;
+                  resetGame();
+                  startGame();
+                }
+              },
+              {
+                label: "\u91cd\u65b0\u6311\u6218",
+                className: "secondary",
+                onClick: () => {
+                  resetGame();
+                  startGame();
+                }
               }
-            },
-            {
-              label: "\u91cd\u65b0\u6311\u6218",
-              className: "secondary",
-              onClick: () => {
-                resetGame();
-                startGame();
+            ]
+          : [
+              {
+                label: "\u518d\u6765\u4e00\u628a",
+                onClick: () => {
+                  currentLevelIndex = 0;
+                  resetGame();
+                  startGame();
+                }
               }
-            }
-          ]
-        : [
-            {
-              label: "\u518d\u6765\u4e00\u628a",
-              onClick: () => {
-                currentLevelIndex = 0;
-                resetGame();
-                startGame();
-              }
-            }
-          ]
-    );
+            ]
+      );
+    }
     renderBoard(false);
     return;
   }
 
   if (remaining === 0 && trayTiles.length > 0) {
     gameState = "lost";
+    stopLevelTimer();
+    updateTimerUi();
     updateStatus("\u6311\u6218\u5931\u8d25");
     showOverlay("\u724c\u9762\u5df2\u6e05\u7a7a", "");
     setOverlayActions([
@@ -1432,6 +1758,8 @@ function checkWinOrLose() {
 
   if (trayTiles.length >= slotLimit) {
     gameState = "lost";
+    stopLevelTimer();
+    updateTimerUi();
     updateStatus("\u6311\u6218\u5931\u8d25");
     showOverlay("\u69fd\u4f4d\u5df2\u6ee1", "");
     setOverlayActions([
@@ -1455,6 +1783,8 @@ function checkWinOrLose() {
     }
 
     gameState = "lost";
+    stopLevelTimer();
+    updateTimerUi();
     updateStatus("\u65e0\u724c\u53ef\u70b9");
     showOverlay("\u5c40\u9762\u9501\u6b7b", "");
     setOverlayActions([
@@ -1513,10 +1843,14 @@ function resetGame() {
   shuffleRemaining = getToolCount("shuffleCount");
   undoRemaining = getToolCount("undoCount");
   removeRemaining = getToolCount("removeCount");
+  stopLevelTimer();
+  levelTimerStartedAt = null;
+  latestClearTimeMs = null;
   gameState = "idle";
   updateLevelLabel();
   updateStatus("\u672a\u5f00\u59cb");
   updateCounters();
+  updateTimerUi();
   renderTray();
   renderStash();
   renderBoard(true);
@@ -1539,6 +1873,13 @@ function startGame() {
     removeRemaining = getToolCount("removeCount");
   }
 
+  if (isTimedLevel()) {
+    levelTimerStartedAt = Date.now();
+  } else {
+    levelTimerStartedAt = null;
+  }
+  startLevelTimer();
+
   setOverlayActions([]);
   gameState = "running";
   updateLevelLabel();
@@ -1557,6 +1898,9 @@ startButton.addEventListener("click", () => {
 undoButton.addEventListener("click", undoLastMove);
 shuffleButton.addEventListener("click", shuffleBoard);
 removeButton.addEventListener("click", removeThreeTiles);
+leaderboardButton.addEventListener("click", () => {
+  showLeaderboardOverlay("第二关历史排行榜");
+});
 restartButton.addEventListener("click", () => {
   currentLevelIndex = 0;
   resetGame();
@@ -1591,4 +1935,6 @@ boardWrap.addEventListener("touchmove", onBoardTouchMove, { passive: false });
 boardWrap.addEventListener("touchend", onBoardTouchEnd, { passive: false });
 boardWrap.addEventListener("touchcancel", onBoardTouchEnd, { passive: false });
 window.addEventListener("resize", () => fitBoardToViewport(true));
+
+
 

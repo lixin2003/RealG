@@ -16,6 +16,13 @@
         </div>
       </div>
 
+      <div class="topbar-side topbar-side-right">
+        <button id="leaderboard-btn" class="mini-pill mini-action-btn" type="button">
+          <span class="mini-label">&#25490;&#34892;</span>
+          <strong>TOP</strong>
+        </button>
+      </div>
+
       <div class="brand-block">
         <div class="title-row">
           <span class="bunny bunny-left" aria-hidden="true"></span>
@@ -37,6 +44,10 @@
       <article class="stat-card">
         <span>&#27133;&#20301;</span>
         <strong id="slot-count">0 / 7</strong>
+      </article>
+      <article id="timer-card" class="stat-card" hidden>
+        <span>&#35745;&#26102;</span>
+        <strong id="timer-text">00:00</strong>
       </article>
     </section>
 
@@ -71,6 +82,7 @@
           <div class="overlay-card">
             <h2 id="overlay-title">&#20934;&#22791;&#24320;&#22987;</h2>
             <p id="overlay-text"></p>
+            <div id="overlay-body" class="overlay-body" hidden></div>
             <div id="overlay-actions" class="overlay-actions"></div>
           </div>
         </div>
