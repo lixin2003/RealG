@@ -410,6 +410,7 @@ async function showLeaderboardOverlay(message = "") {
 function showScoreSubmitOverlay() {
   const clearTimeMs = getLatestClearTimeMs();
   const timedSummary = getTimedLevelSummary();
+  const playerIdPattern = /^[\p{Script=Han}A-Za-z0-9_]{2,20}$/u;
 
   showOverlay("第二关通关", timedSummary || "本次通关完成");
 
@@ -419,7 +420,7 @@ function showScoreSubmitOverlay() {
   const label = document.createElement("label");
   label.className = "overlay-label";
   label.setAttribute("for", "player-id-input");
-  label.textContent = "输入你的玩家 ID（2-20 位，只能用字母、数字、下划线）";
+  label.textContent = "输入你的玩家名字（2-20 位，支持中文、字母、数字、下划线）";
 
   const input = document.createElement("input");
   input.id = "player-id-input";
@@ -427,7 +428,7 @@ function showScoreSubmitOverlay() {
   input.type = "text";
   input.maxLength = 20;
   input.autocomplete = "nickname";
-  input.placeholder = "例如：yang01";
+  input.placeholder = "例如：小羊 / yang01";
   input.value = getStoredPlayerId();
 
   const hint = document.createElement("p");
@@ -442,8 +443,8 @@ function showScoreSubmitOverlay() {
       label: "提交成绩",
       onClick: async () => {
         const playerId = input.value.trim();
-        if (!/^[A-Za-z0-9_]{2,20}$/.test(playerId)) {
-          hint.textContent = "ID 不合法，请用 2-20 位字母、数字或下划线。";
+        if (!playerIdPattern.test(playerId)) {
+          hint.textContent = "名字不合法，请用 2-20 位中文、字母、数字或下划线。";
           return;
         }
 

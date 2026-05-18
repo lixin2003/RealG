@@ -10,7 +10,7 @@
 ```sql
 create table public.scores (
   id bigserial primary key,
-  player_id varchar(20) not null,
+  player_id varchar(40) not null,
   level_id varchar(32) not null,
   clear_time_ms integer not null,
   created_at timestamptz not null default now()

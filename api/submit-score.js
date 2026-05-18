@@ -1,7 +1,7 @@
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const SUPABASE_TABLE = process.env.SUPABASE_SCORE_TABLE || "scores";
-const PLAYER_ID_PATTERN = /^[A-Za-z0-9_]{2,20}$/;
+const PLAYER_ID_PATTERN = /^[\p{Script=Han}A-Za-z0-9_]{2,20}$/u;
 
 function sendJson(response, statusCode, payload) {
   response.status(statusCode).setHeader("Content-Type", "application/json; charset=utf-8");
@@ -60,7 +60,7 @@ export default async function handler(request, response) {
 
   if (!PLAYER_ID_PATTERN.test(playerId)) {
     sendJson(response, 400, {
-      error: "playerId must be 2-20 characters and contain only letters, numbers, or underscores"
+      error: "playerId must be 2-20 characters and contain only Chinese characters, letters, numbers, or underscores"
     });
     return;
   }
