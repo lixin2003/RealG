@@ -81,20 +81,20 @@ window.LEVEL_DEFINITIONS = (() => {
       id: "stage-2",
       name: "Stage 2",
       typeCount: 20,
-      deckDistribution: [12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9],
+      deckDistribution: [9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9],
       deepPriorityTypeIds: ["A16", "A17", "A18", "A19", "A20"],
       undoCount: 1,
       shuffleCount: 0,
       removeCount: 1,
-      tileSize: 54,
-      boardMinHeight: 380,
-      initialViewScaleMultiplier: 1.08,
+      tileSize: 48,
+      boardMinHeight: 360,
+      initialViewScaleMultiplier: 1.04,
       solverMode: "heuristic",
       maxGenerationAttempts: 8,
       visibleStrategy: "scatter",
       showBoardGrid: false,
       renderDepthWindow: 4,
-      renderVisibleCap: 132,
+      renderVisibleCap: 120,
       blockThresholdRatio: 0.16,
       interactionBlockThresholdRatio: 0.42,
       interactionDeepLayerBonus: 0.08,
@@ -104,16 +104,14 @@ window.LEVEL_DEFINITIONS = (() => {
       layers: [
         {
           indexes: [
-            ...gridIndexes(10, 1, 6, 1, 8),
+            ...gridIndexes(10, 1, 6, 2, 7),
             ...coordsIndexes(10, [
               [0, 3], [0, 4], [0, 5], [0, 6],
-              [1, 0], [1, 9],
-              [2, 0], [2, 9],
-              [3, 0], [3, 9],
-              [4, 0], [4, 9],
-              [5, 0], [5, 9],
-              [6, 0], [6, 9],
-              [7, 3], [7, 4], [7, 5], [7, 6]
+              [7, 3], [7, 4], [7, 5], [7, 6],
+              [1, 1], [1, 8],
+              [2, 1], [2, 8],
+              [5, 1], [5, 8],
+              [6, 1], [6, 8]
             ])
           ],
           offsetX: 0,
@@ -121,7 +119,7 @@ window.LEVEL_DEFINITIONS = (() => {
         },
         {
           indexes: [
-            ...gridIndexes(10, 1, 6, 2, 8),
+            ...gridIndexes(10, 1, 6, 2, 6),
             ...coordsIndexes(10, [
               [0, 4], [0, 5],
               [7, 4], [7, 5]
@@ -138,8 +136,7 @@ window.LEVEL_DEFINITIONS = (() => {
               [2, 1], [2, 8],
               [3, 1], [3, 8],
               [4, 1], [4, 8],
-              [5, 1], [5, 8],
-              [6, 3], [6, 6]
+              [5, 1], [5, 8]
             ])
           ],
           offsetX: -4,
