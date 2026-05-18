@@ -461,6 +461,10 @@ button.alert {
   pointer-events: none;
 }
 
+.board.board-grid-hidden::before {
+  display: none;
+}
+
 .tile {
   position: absolute;
   width: 96px;
@@ -469,9 +473,9 @@ button.alert {
   border-radius: 18px;
   border: 2px solid rgba(255, 212, 71, 0.36);
   background: linear-gradient(180deg, rgba(255, 248, 228, 0.98), rgba(255, 231, 176, 0.96));
-  box-shadow: 0 10px 16px rgba(0, 0, 0, 0.24);
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.2);
   cursor: pointer;
-  transition: transform 140ms ease, box-shadow 140ms ease, opacity 140ms ease;
+  transition: transform 120ms ease, opacity 120ms ease;
   overflow: hidden;
 }
 
@@ -481,15 +485,13 @@ button.alert {
 
 .tile.blocked {
   cursor: default;
-  opacity: 0.66;
-  filter: grayscale(0.12);
+  opacity: 0.72;
 }
 
 .tile.available {
   box-shadow:
-    0 10px 16px rgba(0, 0, 0, 0.28),
-    0 0 0 1px rgba(255, 212, 71, 0.28),
-    0 0 14px rgba(255, 212, 71, 0.18);
+    0 6px 10px rgba(0, 0, 0, 0.22),
+    0 0 0 1px rgba(255, 212, 71, 0.22);
 }
 
 .tile img {

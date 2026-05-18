@@ -997,6 +997,7 @@ function updateLevelLabel() {
   if (boardWrap && currentLevel) {
     boardWrap.style.setProperty("--board-min-height", `${currentLevel.boardMinHeight}px`);
   }
+  boardElement.classList.toggle("board-grid-hidden", currentLevel?.showBoardGrid === false);
 }
 
 function updateCounters() {
