@@ -93,16 +93,6 @@ body::before {
   z-index: 1;
 }
 
-.topbar-side-right {
-  position: absolute;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  display: flex;
-  justify-content: flex-end;
-  z-index: 1;
-}
-
 .brand-block {
   width: 100%;
   min-width: 0;
@@ -194,6 +184,11 @@ h1 {
 }
 
 .mini-action-btn {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1;
   min-width: 44px;
   min-height: 36px;
   cursor: pointer;
@@ -201,7 +196,7 @@ h1 {
 }
 
 .mini-action-btn:hover {
-  transform: translateY(-1px);
+  transform: translateY(calc(-50% - 1px));
 }
 
 .header-actions {
