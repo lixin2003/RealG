@@ -1000,6 +1000,8 @@ function getRenderableTiles(activeTiles) {
     return activeTiles;
   }
 
+  const availableTiles = activeTiles.filter((tile) => !isBlocked(tile));
+  const availableIds = new Set(availableTiles.map((tile) => tile.uid));
   const topLayer = activeTiles.reduce((maxLayer, tile) => Math.max(maxLayer, tile.layer), -Infinity);
   let renderable = activeTiles;
 
@@ -1008,10 +1010,37 @@ function getRenderableTiles(activeTiles) {
     renderable = renderable.filter((tile) => tile.layer >= minLayer);
   }
 
-  if (Number.isFinite(renderVisibleCap) && renderable.length > renderVisibleCap) {
-    renderable = [...renderable]
-      .sort((first, second) => second.layer - first.layer || first.y - second.y || first.x - second.x)
-      .slice(0, renderVisibleCap);
+  if (Number.isFinite(renderVisibleCap)) {
+    const prioritized = [
+      ...availableTiles,
+      ...renderable.filter((tile) => !availableIds.has(tile.uid))
+    ];
+
+    if (prioritized.length > renderVisibleCap) {
+      const selected = prioritized
+        .slice()
+        .sort((first, second) => {
+          const firstAvailable = availableIds.has(first.uid) ? 1 : 0;
+          const secondAvailable = availableIds.has(second.uid) ? 1 : 0;
+
+          if (firstAvailable !== secondAvailable) {
+            return secondAvailable - firstAvailable;
+          }
+
+          return second.layer - first.layer || first.y - second.y || first.x - second.x;
+        })
+        .slice(0, renderVisibleCap);
+
+      const selectedIds = new Set(selected.map((tile) => tile.uid));
+      renderable = activeTiles.filter((tile) => selectedIds.has(tile.uid));
+    } else {
+      renderable = prioritized;
+    }
+  } else {
+    renderable = [
+      ...availableTiles,
+      ...renderable.filter((tile) => !availableIds.has(tile.uid))
+    ];
   }
 
   return renderable;
