@@ -18,6 +18,7 @@ const statusText = document.getElementById("status-text");
 const levelText = document.getElementById("level-text");
 const remainingCount = document.getElementById("remaining-count");
 const slotCount = document.getElementById("slot-count");
+const statusStrip = document.querySelector(".status-strip");
 const timerCard = document.getElementById("timer-card");
 const timerText = document.getElementById("timer-text");
 const undoCount = document.getElementById("undo-count");
@@ -250,11 +251,13 @@ function updateTimerUi() {
 
   if (!isTimedLevel()) {
     timerCard.hidden = true;
+    statusStrip?.classList.remove("has-timer");
     timerText.textContent = "00:00";
     return;
   }
 
   timerCard.hidden = false;
+  statusStrip?.classList.add("has-timer");
   timerText.textContent = levelTimerStartedAt
     ? formatElapsedTime(Date.now() - levelTimerStartedAt)
     : "00:00";
@@ -1918,7 +1921,7 @@ function startGame() {
   renderStash();
   renderBoard(true);
 
-  showHintOverlay("操作提示", "可以双指缩放画面，拖动查看更深层卡牌。", 3000);
+  showHintOverlay("操作提示", "可以双指缩放画面，拖动查看更深层卡牌。", 1500);
 }
 
 startButton.addEventListener("click", () => {

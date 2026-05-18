@@ -189,8 +189,15 @@ h1 {
   top: 50%;
   transform: translateY(-50%);
   z-index: 1;
-  min-width: 44px;
-  min-height: 36px;
+  width: 46px;
+  min-width: 46px;
+  max-width: 46px;
+  min-height: 34px;
+  padding: 4px 4px;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  flex: none;
   cursor: pointer;
   transition: transform 140ms ease, box-shadow 140ms ease, opacity 140ms ease;
 }
@@ -340,6 +347,10 @@ button.alert {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 3px;
+}
+
+.status-strip.has-timer {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .stat-card {
@@ -942,6 +953,14 @@ button.alert {
     min-width: 28px;
     min-height: 28px;
     font-size: 0.66rem;
+  }
+
+  .mini-action-btn {
+    width: 42px;
+    min-width: 42px;
+    max-width: 42px;
+    min-height: 32px;
+    padding: 4px 3px;
   }
 
   .board-frame {
