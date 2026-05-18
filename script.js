@@ -373,11 +373,9 @@ async function showLeaderboardOverlay(message = "") {
   showOverlay("第二关排行榜", message);
   setOverlayActions([
     {
-      label: "再来一把",
+      label: "关闭",
       onClick: () => {
-        currentLevelIndex = 0;
-        resetGame();
-        startGame();
+        hideOverlay();
       }
     }
   ]);
